@@ -99,7 +99,7 @@ class _MyHomeState extends State<MyHome> {
     }
 
     String _displayStatus(DownloadTaskStatus status) {
-      if(status == null) return "";
+      if (status == null) return "";
       if (status == DownloadTaskStatus.undefined) {
         return "Unknown";
       } else if (status == DownloadTaskStatus.running) {
@@ -120,8 +120,10 @@ class _MyHomeState extends State<MyHome> {
 
     return Scaffold(
         appBar: AppBar(),
-        body: Consumer<Downloader>(
-          builder: (context, downloader,child) {
+        body: StreamBuilder<List<DownloadTask>>(
+          initialData: [],
+          stream: downloader.tasks.stream,
+          builder: (context, snapshot) {
             if (!downloader.hasTasks) {
               return Center(
                 child: Text("No download task found"),
@@ -129,7 +131,7 @@ class _MyHomeState extends State<MyHome> {
             }
             return ListView(
                 shrinkWrap: true,
-                children: downloader.tasks
+                children: snapshot.data
                     .map((e) => ListTile(
                         title: Text(e.outputFilename),
                         subtitle: Column(

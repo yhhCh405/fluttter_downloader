@@ -13,15 +13,9 @@ class Downloader extends ChangeNotifier {
   ReceivePort _port = ReceivePort();
   static const String _PORTNAME = "downloader_send_port";
 
-  List<DownloadTask> _tasks;
-  List<DownloadTask> get tasks {
-    if (this._tasks == null) {
-      this._tasks = [];
-    }
-    return this._tasks;
-  }
+  BehaviorSubject<List<DownloadTask>> tasks = BehaviorSubject.seeded([]);
 
-  bool get hasTasks => this.tasks.length > 0;
+  bool get hasTasks => this.tasks.value != null && this.tasks.value.length > 0;
 
   void init() {
     bool _registeredPort =
@@ -36,14 +30,14 @@ class Downloader extends ChangeNotifier {
       DownloadTaskStatus status = d[1];
       int progress = d[2];
 
-      _tasks.forEach((e) {
+      List<DownloadTask> _dt = tasks.value;
+      _dt.forEach((e) {
         if (e.taskId == id) {
           e.status = status;
           e.progress = progress;
         }
       });
-
-      notifyListeners();
+      tasks.add(_dt);
     });
 
     FlutterDownloader.registerCallback(downloadCallback);
@@ -55,6 +49,7 @@ class Downloader extends ChangeNotifier {
 
   void discard() {
     _unRegisterPort();
+    tasks.close();
   }
 
   static void downloadCallback(id, status, progress) {
@@ -64,19 +59,20 @@ class Downloader extends ChangeNotifier {
 
   Future<void> addTask(DownloadTask task, {bool forced = false}) async {
     if (!forced) {
-      if (this.tasks != null && this.tasks.contains(task)) {
+      if (this.tasks != null && this.tasks.value.contains(task)) {
         retry(task);
         return;
       }
     }
     await task._createTask();
-    this._tasks.add(task);
-    notifyListeners();
+    List<DownloadTask> _dt = this.tasks.value;
+    _dt.add(task);
+    this.tasks.add(_dt);
   }
 
   Future<void> loadAllTask() async {
     List<dldrModels.DownloadTask> _t = await FlutterDownloader.loadTasks();
-    this._tasks = _t.map((e) => DownloadTask.fromDldrModel(e)).toList();
+    this.tasks.add(_t.map((e) => DownloadTask.fromDldrModel(e)).toList());
     notifyListeners();
   }
 
