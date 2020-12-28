@@ -41,12 +41,90 @@ class MainChild extends StatelessWidget {
   }
 }
 
-class MyHome extends StatefulWidget {
+class DownloadWithDIO extends StatefulWidget {
   @override
-  _MyHomeState createState() => _MyHomeState();
+  _DownloadWithDIOState createState() => _DownloadWithDIOState();
 }
 
-class _MyHomeState extends State<MyHome> {
+class _DownloadWithDIOState extends State<DownloadWithDIO> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          ListTile(
+                        title: Text(e.outputFilename),
+                        subtitle: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(_displayStatus(e.status)),
+                                Text(((e.progress ?? 0) / 100).toString()),
+                              ],
+                            ),
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 500),
+                              child: LinearProgressIndicator(
+                                value: (e.progress ?? 0) / 100,
+                                backgroundColor: Colors.black12,
+                              ),
+                            )
+                          ],
+                        ),
+                        trailing: IconButton(
+                          icon: e.status == DownloadTaskStatus.running
+                              ? Icon(
+                                  Icons.pause,
+                                  color: Colors.red,
+                                )
+                              : e.status == DownloadTaskStatus.enqueued
+                                  ? Icon(
+                                      Icons.history,
+                                      color: Colors.red,
+                                    )
+                                  : e.status == DownloadTaskStatus.paused
+                                      ? Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.red,
+                                        )
+                                      : e.status == DownloadTaskStatus.failed
+                                          ? Icon(
+                                              Icons.refresh,
+                                              color: Colors.red,
+                                            )
+                                          : e.status ==
+                                                  DownloadTaskStatus.undefined
+                                              ? Icon(
+                                                  Icons.device_unknown,
+                                                  color: Colors.red,
+                                                )
+                                              : e.status ==
+                                                      DownloadTaskStatus
+                                                          .complete
+                                                  ? Icon(
+                                                      Icons.open_in_browser,
+                                                      color: Colors.red,
+                                                    )
+                                                  : Container(),
+                          onPressed: () {
+                            handleActionButton(e);
+                          },
+                        )));
+        ],
+      ),
+    );
+  }
+}
+
+class DownloadWithFlutterDownloader extends StatefulWidget {
+  @override
+  _DownloadWithFlutterDownloaderState createState() =>
+      _DownloadWithFlutterDownloaderState();
+}
+
+class _DownloadWithFlutterDownloaderState
+    extends State<DownloadWithFlutterDownloader> {
   Downloader downloader = Downloader();
   List<DownloadTask> _tasks = [
     DownloadTask(

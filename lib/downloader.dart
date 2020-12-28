@@ -9,6 +9,7 @@ import 'package:flutter_downloader/src/models.dart' as dldrModels;
 import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 
+// Test flutter_downloader package
 class Downloader extends ChangeNotifier {
   ReceivePort _port = ReceivePort();
   static const String _PORTNAME = "downloader_send_port";
@@ -30,14 +31,10 @@ class Downloader extends ChangeNotifier {
       DownloadTaskStatus status = d[1];
       int progress = d[2];
 
-      List<DownloadTask> _dt = tasks.value;
-      _dt.forEach((e) {
-        if (e.taskId == id) {
-          e.status = status;
-          e.progress = progress;
-        }
+      modifyTask(id, (e) {
+        e.status = status;
+        e.progress = progress;
       });
-      tasks.add(_dt);
     });
 
     FlutterDownloader.registerCallback(downloadCallback);
@@ -50,6 +47,16 @@ class Downloader extends ChangeNotifier {
   void discard() {
     _unRegisterPort();
     tasks.close();
+  }
+
+  void modifyTask(String targetId, Function(DownloadTask task) run) {
+    List<DownloadTask> _dt = tasks.value;
+    _dt.forEach((e) {
+      if (e.taskId == targetId) {
+        run(e);
+      }
+    });
+    tasks.add(_dt);
   }
 
   static void downloadCallback(id, status, progress) {
@@ -80,8 +87,13 @@ class Downloader extends ChangeNotifier {
     await FlutterDownloader.pause(taskId: task.taskId);
   }
 
-  Future<String> resume(DownloadTask task) async {
-    return await FlutterDownloader.resume(taskId: task.taskId);
+  Future<void> resume(DownloadTask task) async {
+    String tId = await FlutterDownloader.resume(taskId: task.taskId);
+    if (tId != null) {
+      modifyTask(task.taskId, (t) {
+        t._taskId = tId;
+      });
+    }
   }
 
   Future<void> cancel(DownloadTask task) async {
@@ -93,7 +105,12 @@ class Downloader extends ChangeNotifier {
   }
 
   Future<void> retry(DownloadTask task) async {
-    await FlutterDownloader.retry(taskId: task.taskId);
+    String tId = await FlutterDownloader.retry(taskId: task.taskId);
+    if (tId != null) {
+      modifyTask(task.taskId, (t) {
+        t._taskId = tId;
+      });
+    }
   }
 
   Future<void> remove(DownloadTask task) async {

@@ -24,6 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.0
+  dio: ^3.0.10
   flutter_downloader: ^1.5.2
   path_provider: ^1.6.24
   permission_handler: ^5.0.1+1
